@@ -42,6 +42,12 @@ run-interactive:  ## Run interactive CLI to enter custom orders and routes
 	$(call SHOW_CMD,docker run --rm -it $(IMAGE_NAME) python -m src.main --interactive)
 	@docker run --rm -it $(IMAGE_NAME) python -m src.main --interactive
 
+web:  ## Start interactive web presentation on http://localhost:8000
+	$(call SHOW_CMD,docker run --rm -p 8000:8000 $(IMAGE_NAME) python -m src.web.server)
+	@docker run --rm -p 8000:8000 $(IMAGE_NAME) python -m src.web.server
+
+present: web
+
 test:  ## Run all unit tests with pytest
 	$(call SHOW_CMD,docker run --rm $(IMAGE_NAME) pytest -v)
 	@docker run --rm $(IMAGE_NAME) pytest -v
@@ -79,7 +85,7 @@ clear-maps:  ## Delete all generated NNNN_map.png files after confirmation
 		echo "Operation cancelled."; \
 	fi
 
-.PHONY: hi build run run-interactive test benchmark visualize create-map create_map clear-maps
+.PHONY: hi build run run-interactive web present test benchmark visualize create-map create_map clear-maps
 
 # Add your project-specific targets below.
 #

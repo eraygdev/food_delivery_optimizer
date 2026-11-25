@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Food Delivery Route Optimizer</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="brand">
+            <h1>Food Delivery Route Optimizer</h1>
+            <span class="subtitle">Weighted Graph &bull; Min-Heap Priority Queue &bull; Hash Map</span>
+        </div>
+
+        <div class="topbar-actions">
+            <nav class="tabs" aria-label="Primary sections">
+                <button class="tab-btn active" type="button" data-tab="simulator">Route Simulator</button>
+                <button class="tab-btn" type="button" data-tab="presentation">Data Structures &amp; Performance</button>
+            </nav>
+            <div class="topbar-divider" aria-hidden="true"></div>
+            <button id="btn-fullscreen" class="fullscreen-btn" type="button" title="Toggle fullscreen mode">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="15 3 21 3 21 9"></polyline>
+                    <polyline points="9 21 3 21 3 15"></polyline>
+                    <line x1="21" y1="3" x2="14" y2="10"></line>
+                    <line x1="3" y1="21" x2="10" y2="14"></line>
+                </svg>
+                <span id="fullscreen-label">Fullscreen</span>
+            </button>
+        </div>
+    </header>
+
+    <main id="tab-simulator" class="tab-panel active">
+        <section class="workspace">
+            <aside class="panel controls-panel">
+                <div class="card">
+                    <div class="card-header">
+                        <span class="step-pill">1</span>
+                        <h2>Map &amp; Courier Setup</h2>
+                    </div>
+                    <div class="btn-grid-2">
+                        <button id="btn-sample-map" class="btn secondary" type="button">Sample Map (11)</button>
+                        <button id="btn-random-map" class="btn secondary" type="button">Random Grid
+                            (10&times;10)</button>
+                    </div>
+                    <div class="field-row">
+                        <label for="courier-start">Starting Location</label>
+                        <div class="courier-input-group">
+                            <select id="courier-start"></select>
+                            <button id="btn-place-d0" class="btn outline compact-btn" type="button">
+                                Pick on Map
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="step-pill">2</span>
+                        <h2>Delivery Orders</h2>
+                    </div>
+
+                    <div class="picker-section">
+                        <div class="picker-header">
+                            <span class="picker-label">
+                                <i class="dot restaurant"></i> Pickup Restaurant
+                            </span>
+                            <span id="selected-rest-tag" class="selected-tag rest-tag">-</span>
+                        </div>
+                        <div id="rest-picker" class="node-chip-grid" role="radiogroup"
+                            aria-label="Select pickup restaurant"></div>
+                    </div>
+
+                    <div class="picker-section">
+                        <div class="picker-header">
+                            <span class="picker-label">
+                                <i class="dot house"></i> Customer House
+                            </span>
+                            <span id="selected-house-tag" class="selected-tag house-tag">-</span>
+                        </div>
+                        <div id="house-picker" class="node-chip-grid" role="radiogroup"
+                            aria-label="Select customer house"></div>
+                    </div>
+
+                    <div class="route-preview-bar" id="selected-route-preview">
+                        <span class="preview-caption">Selected Pair</span>
+                        <div class="preview-nodes">
+                            <span class="preview-badge rest" id="preview-rest-id">-</span>
+                            <span class="preview-arrow">&rarr;</span>
+                            <span class="preview-badge house" id="preview-house-id">-</span>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="field-row">
+                            <label for="order-prio">Urgency Level</label>
+                            <select id="order-prio">
+                                <option value="1">1 - High (Urgent)</option>
+                                <option value="2" selected>2 - Normal</option>
+                                <option value="3">3 - Low</option>
+                            </select>
+                        </div>
+                        <div class="field-row">
+                            <label for="order-qty">Order Count</label>
+                            <input id="order-qty" type="number" min="1" max="5" value="1" />
+                        </div>
+                    </div>
+
+                    <div class="btn-row-split">
+                        <button id="btn-add-order" class="btn primary" type="button">+ Add Order</button>
+                        <button id="btn-clear-orders" class="btn danger-outline" type="button">Clear All</button>
+                    </div>
+
+                    <button id="btn-preset-r2" class="btn subtle full-width" type="button">
+                        Load Sample Batch (R2 &rarr; H1 &amp; H4)
+                    </button>
+
+                    <ul id="orders-list" class="orders-list"></ul>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <span class="step-pill">3</span>
+                        <h2>Optimize &amp; Animate</h2>
+                    </div>
+                    <div class="field-row">
+                        <div class="slider-header">
+                            <label for="urgency-penalty">Priority Weight</label>
+                            <strong id="penalty-val" class="slider-value">4.0 min</strong>
+                        </div>
+                        <input id="urgency-penalty" type="range" min="0" max="10" step="1" value="4" />
+                        <span class="field-hint">Higher values favor urgent orders over shorter travel distance.</span>
+                    </div>
+                    <button id="btn-optimize" class="btn success full-width" type="button">
+                        Calculate Best Route
+                    </button>
+                    <div class="playback-controls">
+                        <button id="btn-prev" class="btn secondary" type="button" disabled>&lsaquo; Prev</button>
+                        <button id="btn-play" class="btn primary" type="button" disabled>Play</button>
+                        <button id="btn-next" class="btn secondary" type="button" disabled>Next &rsaquo;</button>
+                        <button id="btn-reset-route" class="btn danger-outline" type="button" disabled>Reset</button>
+                    </div>
+                    <p id="status-msg" class="status-msg">Set the starting location, add orders, and calculate the
+                        route.</p>
+                </div>
+            </aside>
+
+            <section class="panel map-panel">
+                <div class="map-legend">
+                    <span><i class="dot depot"></i> Courier Start</span>
+                    <span><i class="dot restaurant"></i> Restaurant</span>
+                    <span><i class="dot house"></i> Customer House</span>
+                    <span><i class="dot intersection"></i> Intersection</span>
+                    <span><i class="line-oneway"></i> One-Way Street</span>
+                </div>
+                <div class="svg-wrapper">
+                    <svg id="city-svg" viewBox="0 0 820 560" preserveAspectRatio="xMidYMid meet"></svg>
+                </div>
+                <div id="itinerary-box" class="itinerary-box hidden">
+                    <div class="itinerary-header">
+                        <h3>Delivery Route Steps</h3>
+                        <div class="badge-group">
+                            <span id="total-time-badge" class="badge"></span>
+                            <span id="baseline-badge" class="badge muted"></span>
+                            <span id="saved-badge" class="badge saved"></span>
+                        </div>
+                    </div>
+                    <div id="itinerary-steps" class="itinerary-steps"></div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <main id="tab-presentation" class="tab-panel">
+        <section class="presentation-grid">
+            <article class="card">
+                <h2>Graph (Adjacency List)</h2>
+                <p>Stores city intersections, restaurants, and customer houses inside our custom
+                    <strong>HashMap</strong>. Since city road networks are sparse, an adjacency list uses
+                    <strong>O(V + E)</strong> memory instead of an O(V&sup2;) matrix.
+                </p>
+            </article>
+            <article class="card">
+                <h2>Priority Queue (Binary Min-Heap)</h2>
+                <p>An array-based binary heap with FIFO tie-breaking. It selects the closest unvisited node in
+                    Dijkstra's algorithm and ranks candidate stops in <strong>O(log N)</strong> time per operation.</p>
+            </article>
+            <article class="card">
+                <h2>Hash Map (Separate Chaining)</h2>
+                <p>Automatically resizes when the load factor exceeds 0.75. It provides <strong>O(1)</strong> average
+                    lookup time for graph nodes, distance tables, and active orders.</p>
+            </article>
+        </section>
+
+        <section class="card benchmark-card">
+            <div class="itinerary-header">
+                <div>
+                    <h2>Live Performance Benchmark</h2>
+                    <p class="subtitle-dark">Compares MinHeap O(log N) with Linear Scan O(N), and MinHeap Dijkstra
+                        O((V+E) log V) with Naive Dijkstra O(V&sup2;) directly on the server.</p>
+                </div>
+                <button id="btn-run-bench" class="btn primary bench-run-btn" type="button">Run Benchmark</button>
+            </div>
+            <div class="bench-charts">
+                <div>
+                    <h3>Priority Queue: MinHeap vs. Linear Scan (ms)</h3>
+                    <svg id="bench-pq-svg" class="chart-svg" viewBox="0 0 460 260"></svg>
+                </div>
+                <div>
+                    <h3>Shortest Path: MinHeap vs. Naive O(V&sup2;) (ms)</h3>
+                    <svg id="bench-graph-svg" class="chart-svg" viewBox="0 0 460 260"></svg>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+
+</html>

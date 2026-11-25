@@ -81,7 +81,11 @@ class OrderDispatcher:
                 if math.isinf(travel_time):
                     continue
 
-                score = travel_time + (order.priority - 1) * urgency_penalty
+                # Complete zero-cost pickups/deliveries at the current node before departing
+                if travel_time == 0.0:
+                    score = -2.0 if action == "deliver" else -1.0
+                else:
+                    score = travel_time + (order.priority - 1) * urgency_penalty
                 candidate_heap.push(score, (oid, action, target, travel_time))
 
             if candidate_heap.is_empty():
