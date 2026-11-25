@@ -83,19 +83,19 @@ def build_random_grid_map(
     # Assign D0 (depot), R1..Rk (restaurants), H1..Hm (houses) to random cells
     depot_cell = chosen_cells[0]
     cell_to_id[depot_cell] = "D0"
-    graph.add_node("D0", node_type="depot", label="Depo (D0)")
+    graph.add_node("D0", node_type="depot", label="Depot (D0)")
 
     for i in range(1, 1 + num_restaurants):
         cell = chosen_cells[i]
         rid = f"R{i}"
         cell_to_id[cell] = rid
-        graph.add_node(rid, node_type="restaurant", label=f"Restoran {i}")
+        graph.add_node(rid, node_type="restaurant", label=f"Restaurant {i}")
 
     for i in range(1, 1 + num_houses):
         cell = chosen_cells[num_restaurants + i]
         hid = f"H{i}"
         cell_to_id[cell] = hid
-        graph.add_node(hid, node_type="house", label=f"Ev {i}")
+        graph.add_node(hid, node_type="house", label=f"House {i}")
 
     # Assign remaining cells as intersections
     inter_idx = 1
@@ -104,7 +104,7 @@ def build_random_grid_map(
             iid = f"I{inter_idx:02d}"
             inter_idx += 1
             cell_to_id[(r, c)] = iid
-            graph.add_node(iid, node_type="intersection", label=f"Kavsak {iid}")
+            graph.add_node(iid, node_type="intersection", label=f"Intersection {iid}")
 
     for (r, c), node_id in cell_to_id.items():
         coords[node_id] = (float(c), float(rows - 1 - r))

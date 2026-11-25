@@ -27,10 +27,10 @@ def print_plan(
         action_label = "PICKUP " if step.action == "pickup" else "DELIVER"
         print(
             f"  {idx}. [{action_label}] {step.order_id} | "
-            f"{route_str} ({step.travel_time:.1f} dk)"
+            f"{route_str} ({step.travel_time:.1f} min)"
         )
-    print(f"  Teslim Sirasi : {' -> '.join(plan.delivery_sequence)}")
-    print(f"  Toplam Sure   : {plan.total_time:.1f} dakika")
+    print(f"  Delivery Order: {' -> '.join(plan.delivery_sequence)}")
+    print(f"  Total Time    : {plan.total_time:.1f} min")
 
 
 def parse_orders_arg(raw_orders: str) -> list[Order]:
@@ -62,37 +62,35 @@ def parse_orders_arg(raw_orders: str) -> list[Order]:
 def prompt_interactive_orders(city_graph: Graph) -> tuple[str, list[Order], float]:
     """Prompt the user interactively for courier start node and custom orders."""
     print(
-        "\nMevcut Dugumler: Depo=[D0], Restoranlar=[R1,R2,R3], Evler=[H1,H2,H3,H4], Kavsaklar=[I1,I2,I3]"
+        "\nNodes: Depot=[D0], Restaurants=[R1,R2,R3], Houses=[H1,H2,H3,H4], Intersections=[I1,I2,I3]"
     )
 
     while True:
-        start_input = input("Kurye baslangic noktasi [D0]: ").strip().upper() or "D0"
+        start_input = input("Courier start node [D0]: ").strip().upper() or "D0"
         if city_graph.has_node(start_input):
             break
-        print(f"Hata: '{start_input}' haritada yok, tekrar deneyin.")
+        print(f"Error: '{start_input}' is not on the map. Try again.")
 
-    penalty_raw = input("Aciliyet ceza katsayisi [4.0]: ").strip()
+    penalty_raw = input("Urgency penalty weight [4.0]: ").strip()
     urgency_penalty = float(penalty_raw) if penalty_raw else 4.0
 
     orders: list[Order] = []
-    print(
-        "\nSiparis ekleyin (bitirmek icin Siparis ID kismini bos birakip Enter'a basin):"
-    )
+    print("\nAdd orders (press Enter on Order ID or type 'q' to finish):")
     while True:
         default_id = f"ORD-{len(orders) + 1}"
-        oid_prompt = f"  Siparis ID (ornek {default_id}, bitirmek icin 'q'): "
+        oid_prompt = f"  Order ID (e.g. {default_id}, 'q' to finish): "
         oid = input(oid_prompt).strip().upper()
         if oid in ("", "Q") and orders:
             break
         if oid == "Q" and not orders:
-            print("  En az 1 siparis girmelisiniz.")
+            print("  Please enter at least 1 order.")
             continue
         if not oid:
             oid = default_id
 
-        rest = input("  Restoran (R1/R2/R3): ").strip().upper()
-        house = input("  Teslimat Evi (H1/H2/H3/H4): ").strip().upper()
-        prio_str = input("  Oncelik (1=Acil, 2=Normal, 3=Standart) [2]: ").strip()
+        rest = input("  Restaurant (R1/R2/R3): ").strip().upper()
+        house = input("  House (H1/H2/H3/H4): ").strip().upper()
+        prio_str = input("  Priority (1=Urgent, 2=Normal, 3=Standard) [2]: ").strip()
         prio = int(prio_str) if prio_str else 2
 
         try:
@@ -102,13 +100,12 @@ def prompt_interactive_orders(city_graph: Graph) -> tuple[str, list[Order], floa
                 customer_id=house,
                 priority=prio,
             )
-            # Validate nodes immediately before accepting
             if not city_graph.has_node(rest) or not city_graph.has_node(house):
-                raise KeyError("Gecersiz restoran veya ev dugumu.")
+                raise KeyError("Invalid restaurant or house node.")
             orders.append(order)
-            print(f"  -> Eklendi: {oid} ({rest} -> {house}, oncelik={prio})")
+            print(f"  -> Added: {oid} ({rest} -> {house}, priority={prio})")
         except (ValueError, KeyError) as exc:
-            print(f"  Hata: {exc}. Bu siparis eklenmedi, tekrar deneyin.")
+            print(f"  Error: {exc}. Order skipped, try again.")
 
     return start_input, orders, urgency_penalty
 
@@ -155,15 +152,15 @@ def main() -> None:
 
     city_graph = build_sample_city_graph()
     print(
-        f"Harita Yuklendi: {city_graph.node_count()} dugum, "
-        f"{city_graph.edge_count()} yonlu kenar"
+        f"Map Loaded: {city_graph.node_count()} nodes, "
+        f"{city_graph.edge_count()} directed edges"
     )
 
     if args.path:
         src_node, dst_node = args.path[0].upper(), args.path[1].upper()
         cost, path = dijkstra_shortest_path(city_graph, src_node, dst_node)
         print(
-            f"\nEn Kisa Yol ({src_node} -> {dst_node}): {' -> '.join(path)} ({cost:.1f} dk)"
+            f"\nShortest Path ({src_node} -> {dst_node}): {' -> '.join(path)} ({cost:.1f} min)"
         )
         return
 
@@ -172,7 +169,7 @@ def main() -> None:
         dispatcher = OrderDispatcher(city_graph)
         for order in orders:
             dispatcher.add_order(order)
-        print_plan("Ozel Interaktif Rota", dispatcher, courier_start, penalty)
+        print_plan("Custom Interactive Route", dispatcher, courier_start, penalty)
         return
 
     if args.orders:
@@ -181,7 +178,7 @@ def main() -> None:
         dispatcher = OrderDispatcher(city_graph)
         for order in orders:
             dispatcher.add_order(order)
-        print_plan("Ozel Parametreli Rota", dispatcher, courier_start, args.penalty)
+        print_plan("Custom CLI Route", dispatcher, courier_start, args.penalty)
         return
 
     dispatcher = OrderDispatcher(city_graph)
@@ -195,8 +192,8 @@ def main() -> None:
         Order(order_id="ORD-103", restaurant_id="R3", customer_id="H3", priority=3)
     )
 
-    print_plan("Aciliyet Oncelikli Rota (SLA Odakli)", dispatcher, "D0", 4.0)
-    print_plan("Saf En Kisa Yol Odakli Rota", dispatcher, "D0", 0.0)
+    print_plan("Urgency-Priority Route (SLA)", dispatcher, "D0", 4.0)
+    print_plan("Shortest-Path Route", dispatcher, "D0", 0.0)
 
 
 if __name__ == "__main__":

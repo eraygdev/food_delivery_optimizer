@@ -66,17 +66,17 @@ clear-maps:  ## Delete all generated NNNN_map.png files after confirmation
 	@shopt -s nullglob; \
 	maps=(outputs/[0-9][0-9][0-9][0-9]_map.png); \
 	if [ $${#maps[@]} -eq 0 ]; then \
-		echo "Silinecek harita bulunamadi (outputs/ icinde *_map.png yok)."; \
+		echo "No generated maps found in outputs/."; \
 		exit 0; \
 	fi; \
-	echo "Silinecek haritalar ($${#maps[@]} adet):"; \
+	echo "Maps to delete ($${#maps[@]} files):"; \
 	printf "  - %s\n" "$${maps[@]}"; \
-	read -r -p "Tum haritalari silmek istediginize emin misiniz? [e/H]: " ans; \
-	if [[ "$$ans" =~ ^[eEyY]$$ ]]; then \
+	read -r -p "Delete all generated maps? [y/N]: " ans; \
+	if [[ "$$ans" =~ ^[yY]$$ ]]; then \
 		rm -f "$${maps[@]}"; \
-		echo "Tum haritalar silindi."; \
+		echo "All generated maps deleted."; \
 	else \
-		echo "Islem iptal edildi."; \
+		echo "Operation cancelled."; \
 	fi
 
 .PHONY: hi build run run-interactive test benchmark visualize create-map create_map clear-maps
