@@ -30,7 +30,7 @@ AI INSTRUCTIONS — read before filling this template:
 - **[FEATURE_NAME]** — [One line: what it does]
 - **[FEATURE_NAME]** — [One line: what it does]
 - **[FEATURE_NAME]** — [One line: what it does]
-- **[FEATURE_NAME]** — [One line: what it does]
+- **[FEATURE_NAME]** — [One line: what it does]d
 
 ## Tech Stack
 
