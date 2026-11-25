@@ -52,23 +52,23 @@ def test_min_heap_ordering_and_fifo_ties() -> None:
 
 def test_graph_directed_and_bidirectional_edges() -> None:
     graph = Graph()
-    graph.add_node("H0", node_type="hub")
+    graph.add_node("D0", node_type="depot")
     graph.add_node("I2", node_type="intersection")
     graph.add_node("R2", node_type="restaurant")
 
-    graph.add_edge("H0", "I2", weight=2, bidirectional=True)
+    graph.add_edge("D0", "I2", weight=2, bidirectional=True)
     graph.add_edge("I2", "R2", weight=3, bidirectional=False)
 
     assert graph.node_count() == 3
     assert graph.edge_count() == 3
-    assert ("I2", 2) in graph.neighbors("H0")
-    assert ("H0", 2) in graph.neighbors("I2")
+    assert ("I2", 2) in graph.neighbors("D0")
+    assert ("D0", 2) in graph.neighbors("I2")
     assert ("R2", 3) in graph.neighbors("I2")
     assert ("I2", 3) not in graph.neighbors("R2")
-    assert graph.get_node_data("H0") == {"node_type": "hub"}
+    assert graph.get_node_data("D0") == {"node_type": "depot"}
 
     with pytest.raises(ValueError):
-        graph.add_edge("H0", "R2", weight=-1)
+        graph.add_edge("D0", "R2", weight=-1)
 
     with pytest.raises(KeyError):
         graph.neighbors("UNKNOWN")

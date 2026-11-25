@@ -8,4 +8,5 @@ venv/
 .gitignore
 Makefile
 export.py
+outputs/
 *.md
